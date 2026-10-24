@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .venv/
 .env
+.pytest_cache/
 
 # Track documentation, ignore raw metrics
 results/history.jsonl
