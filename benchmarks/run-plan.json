@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-24T07:39:09.093093+00:00",
+  "identity": {
+    "code_sha256": {
+      "features.py": "f70e6507d6717ed20e56e1a3f4fa47b98f953475d8ead488642afad1de128bc0",
+      "train.py": "4c519f4d05f56cb5c3f99913a38a27ac12442ef9668b455969ea02ec5245c3a2",
+      "prepare.py": "5d31fbb67a1b35310feceb409a3ec4ddafe176ba2e7389873133bf776ed9ceaa",
+      "benchmark.py": "2eeff4be4b4bdf8eb42f9f9480fc101a252c63f0186132f00cdeaa995b24d393"
+    },
+    "config_sha256": "b1a4346ce96cf7a37fee2d8b77a63dff81559033131b59a77ed7ebd309176028",
+    "provenance_sha256": "4c3b39c3940f30d1140c87813445137a11ebcd5ce9a58274d690272532962354",
+    "extract_sha256": "be92c936da78c15da761eb8106d8908e7fc5bc759b8c74aa05df475aa2394f44",
+    "runtime": {
+      "python": "3.12.13",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "xgboost": "3.4.1",
+      "scikit-learn": "1.9.1"
+    }
+  },
+  "validation_result_sha256": "faee6e329fe8303eafdfb4333054b0eba07b5ca89ac3c7aabc5db79ab1224a1a",
+  "selection": "One fixed configuration declared before validation. No tuning or early stopping.",
+  "test_protocol": "Refit the same per-region configuration on train+validation; rolling 168-hour recursive forecasts seeded with pre-origin actuals only."
+}
