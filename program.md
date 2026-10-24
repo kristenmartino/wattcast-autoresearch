@@ -10,8 +10,15 @@
 ## Objective
 
 Minimize **MAPE (Mean Absolute Percentage Error)** for energy demand forecasting 
-across 8 U.S. grid regions. Current baseline: **3.13%**. Every 0.01% improvement 
-matters — this translates to real MW prediction accuracy.
+on the synthetic validation data for eight region labels. Establish a baseline
+for each session and record the data hash and settings. The historical journal
+starts at 1.7232%; that score is not real-grid forecasting accuracy.
+
+The current preparation leaks the target through rolling demand statistics, and
+the evaluator uses observed validation lags rather than recursive forecasts.
+Treat this as a diagnostic tuning exercise until those issues are corrected.
+Repeated validation improvements do not establish independent test performance.
+See README.md for the evaluation limits.
 
 ---
 
@@ -126,20 +133,20 @@ trend analysis, pattern detection, and region-level breakdowns.
 
 ---
 
-## Success Criteria
+## Session completion
 
-- **Good run**: 15+ experiments with 3+ kept improvements
-- **Great run**: Sub-2.8% MAPE (>10% improvement from baseline)
-- **Exceptional run**: Sub-2.5% MAPE with consistent per-region performance
+Set an experiment count or time budget before starting. Record each attempted
+change, validation score, settings, and keep/discard decision. A session that
+finds no improvement is still a useful result. Label all output as synthetic
+validation work; do not translate score changes into real-grid accuracy claims.
 
 ---
 
 ## Notes for the Agent
 
-- The 30-minute cadence in WattCast v2 matches EIA data refresh. But for autoresearch,
-  we're optimizing the model itself, not the serving layer.
-- ERCOT and SECO tend to be hardest (extreme weather sensitivity). If you can crack 
-  those, overall MAPE will drop significantly.
+- This repository uses generated data and has no working EIA fetch or serving cadence.
+- Compare region-level errors within the generated dataset; the region names do
+  not establish performance on the corresponding real grids.
 - Watch for overfitting: if train MAPE drops but val MAPE doesn't, increase regularization.
 - The `demand_lag_24h` and `demand_lag_168h` features are usually the most important.
   Build on that signal — e.g., `demand_lag_24h / demand_rolling_mean_168h` captures 

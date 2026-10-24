@@ -1,117 +1,73 @@
-# ⚡ WattCast Autoresearch
-### Autonomous ML Optimization for Energy Demand Forecasting
+# WattCast Autoresearch
 
-Applies [Karpathy's autoresearch pattern](https://github.com/karpathy/autoresearch) to
-WattCast's weather-aware energy demand forecasting pipeline.
+An experiment in using a coding agent to tune XGBoost on synthetic hourly
+electricity-demand data, following [Karpathy's autoresearch pattern](https://github.com/karpathy/autoresearch).
 
-An AI agent iterates on `train.py` — modifying feature engineering, hyperparameters,
-model architecture, and preprocessing — then evaluates each variant against MAPE on
-a held-out validation set. Improvements are kept and committed to git. Regressions
-are reverted. The loop runs indefinitely while you sleep.
+`prepare.py` generates data for eight region labels. Its EIA/Open-Meteo fetch
+function is a placeholder and returns no data, including when `EIA_API_KEY` is
+set. This repository does not currently benchmark forecasts on real grid data.
 
-**Baseline: 3.13% MAPE across 8 U.S. grid regions.**
+## Evaluation limits
 
----
+The current feature preparation includes the demand being predicted in its
+rolling demand statistics. Validation rows also contain observed demand lags;
+the evaluator does not recursively feed predictions into subsequent hours.
+These features and the evaluation protocol need correction before the scores
+can support a forward-forecasting claim.
 
-## Quick Start
+The agent repeatedly optimizes the same validation set. There is no separate
+untouched test set in the supplied workflow, so improvements on that set do
+not establish generalization.
+
+The committed [experiment journal](results/JOURNAL.md) and
+[changelog](results/changelog.md) record a baseline of **1.7232% MAPE** and a
+best score of **1.4411%** for that historical experiment. These are recorded
+validation scores, not independently reproduced results or leakage-free forecast
+accuracy. The previous README's 3.13% baseline does not match those records and
+has been removed.
+
+## Run locally
 
 ```bash
-# 1. Clone and enter
-git clone <your-repo-url>
+git clone https://github.com/kristenmartino/wattcast-autoresearch.git
 cd wattcast-autoresearch
-
-# 2. Install dependencies
 pip install -r requirements.txt
-
-# 3. Prepare data (one-time)
-python prepare.py
-
-# 4. Run baseline to verify setup
-python train.py
-
-# 5. Point your agent at program.md and let it rip
-#    With Claude Code:
-claude "Read program.md and start running experiments on train.py"
+python prepare.py    # synthetic data, including when an API key is set
+python train.py      # diagnostic validation metrics; see limits above
 ```
 
----
+To run an agent-driven experiment, provide a coding agent and follow
+[`program.md`](program.md). The repository supplies training scripts and
+instructions; the agent performs the edit/run/keep-or-revert loop.
 
-## Architecture
-
-```
-wattcast-autoresearch/
-├── prepare.py          # Data download + feature store build (READ-ONLY)
-├── train.py            # The editable asset — agent modifies this
-├── program.md          # Research directions — human modifies this
-├── requirements.txt    # Dependencies
-├── README.md           # This file
-├── data/               # Created by prepare.py
-│   ├── features.parquet
-│   ├── train.parquet
-│   └── val.parquet
-└── results/            # Created by train.py
-    ├── metrics.json    # Latest run metrics (agent reads this)
-    └── history.jsonl   # Full experiment history
+```bash
+claude "Read program.md and run a bounded experiment session on train.py"
 ```
 
-### The Loop
+## Files
 
-```
-┌─────────────────────────────────────────────────┐
-│  Agent reads program.md + recent history        │
-│  ↓                                              │
-│  Agent modifies train.py (one targeted change)  │
-│  ↓                                              │
-│  python train.py → produces metrics.json        │
-│  ↓                                              │
-│  MAPE improved? → git commit (keep)             │
-│  MAPE worse?    → git revert (discard)          │
-│  ↓                                              │
-│  Loop back                                      │
-└─────────────────────────────────────────────────┘
-```
+| File | Purpose |
+|---|---|
+| `prepare.py` | Synthetic data generation, feature preparation, chronological train/validation split |
+| `train.py` | Feature selection, XGBoost training, validation scoring |
+| `program.md` | Agent instructions and experiment constraints |
+| `journal.py` | Summarizes local experiment history |
+| `results/JOURNAL.md` | Committed historical experiment summary |
+| `results/changelog.md` | Historical notes on attempted changes |
 
----
+`train.py` reports pooled row-level MAPE across the validation data, plus
+per-region diagnostics. Training uses validation data for early stopping.
+Compute time varies with the chosen parameters; there is no enforced runtime
+budget.
 
-## Design Decisions
+## Before publishing a forecasting benchmark
 
-**Single metric: MAPE.** Mean Absolute Percentage Error on the validation set,
-averaged across all 8 grid regions. This is the only number the agent optimizes.
-Region-level MAPE is logged for diagnostics but doesn't drive keep/discard.
+1. Implement and verify real-data ingestion with recorded source dates.
+2. Remove target leakage and match feature construction to the intended forecast horizon.
+3. Reserve an independent test period outside the agent's tuning loop.
+4. Compare against a seasonal baseline and report per-region errors, data provenance,
+   model settings, and evaluation dates.
 
-**Fixed compute budget.** Each experiment trains XGBoost to completion (fast —
-typically 10-30 seconds). No time cap needed since XGBoost isn't iterating like
-neural net training. The constraint is instead on model complexity (max depth,
-n_estimators) to keep experiments comparable.
-
-**Single file.** `train.py` is ~400 lines and contains everything: feature
-engineering, preprocessing, model definition, training loop, and evaluation.
-The agent can modify any of it. `prepare.py` is read-only.
-
-**Git as the ledger.** Every kept experiment is a git commit. The full history
-of what worked and what didn't is in the git log.
-
----
-
-## Grid Regions
-
-| Region | Description |
-|--------|-------------|
-| ERCOT  | Texas grid — extreme weather sensitivity |
-| PJM    | Mid-Atlantic/Midwest — largest U.S. market |
-| CAISO  | California — solar/wind integration |
-| MISO   | Central U.S. — wind-heavy |
-| SPP    | Southern Plains — rapid growth |
-| NYISO  | New York — urban demand patterns |
-| ISONE  | New England — weather-driven peaks |
-| SECO   | Southeast — cooling-dominated |
-
----
-
-## Extending
-
-To add a new grid region, add its EIA series ID to `prepare.py` and re-run.
-The training pipeline auto-discovers regions from the data.
-
-To change the optimization target, modify the `METRIC` constant in `train.py`.
-Options: `mape`, `rmse`, `mae`, `r2`.
+Adding a region to the current generator adds another synthetic series. It does
+not connect an EIA series. Changing the optimization metric requires updating
+the scorer and experiment instructions together.
