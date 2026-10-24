@@ -4,14 +4,15 @@ prepare.py — Data Download & Feature Store Builder
 ====================================================
 READ-ONLY: The agent must NOT modify this file.
 
-Downloads hourly demand data from EIA API and weather data from Open-Meteo,
-builds the feature store, and splits into train/val sets.
+Generates synthetic hourly demand/weather data, builds features, and splits
+into train/validation sets. Real API ingestion is not implemented.
 
 Usage:
     python prepare.py
 
-Requires EIA_API_KEY environment variable for real data.
-Falls back to synthetic data generation for development/testing.
+Setting EIA_API_KEY does not enable real ingestion: try_fetch_real_data is a
+placeholder. Rolling demand features currently include the target row; scores
+are diagnostic and must not be presented as leakage-free forecast accuracy.
 """
 
 import os
@@ -166,14 +167,14 @@ def generate_synthetic_data(n_days: int = 730) -> pd.DataFrame:
 
 
 def try_fetch_real_data() -> pd.DataFrame | None:
-    """Attempt to fetch real data from EIA + Open-Meteo APIs."""
+    """Placeholder for EIA/Open-Meteo ingestion; currently always returns None."""
     api_key = os.environ.get("EIA_API_KEY")
     if not api_key:
         return None
     
     try:
         import requests
-        print("  Fetching real data from EIA API...")
+        print("  Real-data ingestion is not implemented; using synthetic data.")
         # Implementation for real API calls would go here
         # For now, return None to fall back to synthetic
         return None
@@ -255,7 +256,7 @@ def build_feature_store(df: pd.DataFrame) -> pd.DataFrame:
 def split_data(df: pd.DataFrame, val_ratio: float = 0.15):
     """
     Temporal split — last val_ratio of data is validation.
-    Ensures no future leakage.
+    This split alone does not prevent feature leakage or tuning overfit.
     """
     print("  Splitting train/val...")
     
@@ -283,7 +284,7 @@ def main():
     # Try real data first, fall back to synthetic
     raw_df = try_fetch_real_data()
     if raw_df is None:
-        print("  Using synthetic data generator (set EIA_API_KEY for real data)")
+        print("  Using synthetic data; EIA/Open-Meteo ingestion is not implemented.")
         raw_df = generate_synthetic_data(n_days=730)  # 2 years
     
     print(f"  Raw data: {len(raw_df):,} rows across {raw_df['region'].nunique()} regions")

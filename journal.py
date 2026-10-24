@@ -210,6 +210,9 @@ def generate_journal(experiments: list[dict]) -> str:
 
     # ── Header ──
     lines.append("# ⚡ WattCast Autoresearch Journal")
+    lines.append("\n> Synthetic-data validation scores; not independent test or real-grid forecast accuracy. "
+                 "Current rolling demand features include the target row. "
+                 "See [evaluation limits](../README.md#evaluation-limits).\n")
     lines.append(f"*Auto-generated at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n")
 
     # ── Executive Summary ──
