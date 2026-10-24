@@ -1,73 +1,98 @@
 # WattCast Autoresearch
 
-An experiment in using a coding agent to tune XGBoost on synthetic hourly
-electricity-demand data, following [Karpathy's autoresearch pattern](https://github.com/karpathy/autoresearch).
+A reproducible XGBoost benchmark on hourly electricity demand from eight U.S.
+balancing authorities. The current pipeline uses real EIA-930 demand, causal
+features, separate chronological validation/test periods, and recursive forecasts.
 
-`prepare.py` generates data for eight region labels. Its EIA/Open-Meteo fetch
-function is a placeholder and returns no data, including when `EIA_API_KEY` is
-set. This repository does not currently benchmark forecasts on real grid data.
+## Benchmark result
 
-## Evaluation limits
+The July–December 2025 test scored **33,432 forecast hours** across **199 of 208
+candidate region-weeks**. At the 168-hour horizon:
 
-The current feature preparation includes the demand being predicted in its
-rolling demand statistics. Validation rows also contain observed demand lags;
-the evaluator does not recursively feed predictions into subsequent hours.
-These features and the evaluation protocol need correction before the scores
-can support a forward-forecasting claim.
+| Model | MAPE | WAPE | Signed bias |
+|---|---:|---:|---:|
+| XGBoost | 6.84% | 6.53% | -0.82% |
+| Same hour last week | 8.58% | 8.00% | +1.05% |
 
-The agent repeatedly optimizes the same validation set. There is no separate
-untouched test set in the supplied workflow, so improvements on that set do
-not establish generalization.
+See the [full report](benchmarks/RESULTS.md) for regional results, shorter forecast
+prefixes, coverage exclusions, source hashes, and run details. These are retrospective
+results on the EIA historical files retrieved in October 2026; they do not reproduce
+publication-time revisions or reporting delays. No weather inputs are used.
 
-The committed [experiment journal](results/JOURNAL.md) and
-[changelog](results/changelog.md) record a baseline of **1.7232% MAPE** and a
-best score of **1.4411%** for that historical experiment. These are recorded
-validation scores, not independently reproduced results or leakage-free forecast
-accuracy. The previous README's 3.13% baseline does not match those records and
-has been removed.
+## What changed
 
-## Run locally
+- Rolling demand means and standard deviations now shift by one hour before
+  aggregation, excluding the value being predicted.
+- All regions retain a continuous UTC hourly grid. Missing hours remain missing;
+  lag 24 means 24 hours ago, not 24 surviving rows ago.
+- Multi-hour forecasts append their own predictions to the lag history.
+- Validation fits on 2024 and scores January–June 2025. The final test refits the
+  same configuration on January 2024–June 2025 and scores July–December 2025.
+- The configuration is fixed at 400 trees per region, without early stopping or
+  hyperparameter search. Code, data, configuration, and runtime versions are locked
+  in a plan committed before final-test scoring.
+
+The original 1.44% synthetic validation result is archived under `results/` and
+is not comparable to this benchmark. The corrected runs live under `benchmarks/`.
+
+An origin is the first predicted UTC hour-ending timestamp; its last observed
+seed hour is one hour earlier. Forecast lead 1 therefore labels the origin.
+
+## Reproduce offline
+
+The normalized EIA extract and its provenance are committed. No API key or data
+download is needed for tests or exact-snapshot reproduction.
 
 ```bash
 git clone https://github.com/kristenmartino/wattcast-autoresearch.git
 cd wattcast-autoresearch
-pip install -r requirements.txt
-python prepare.py    # synthetic data, including when an API key is set
-python train.py      # diagnostic validation metrics; see limits above
+uv venv --python 3.12.13
+uv pip install --python .venv/bin/python -r requirements-lock.txt
+.venv/bin/python -m pytest -q
+
+# New output paths preserve the original evidence.
+.venv/bin/python train.py --stage validation --output benchmarks/reproductions/validation.json
+.venv/bin/python train.py --stage test --include-test --plan benchmarks/run-plan.json --output benchmarks/reproductions/test.json
 ```
 
-To run an agent-driven experiment, provide a coding agent and follow
-[`program.md`](program.md). The repository supplies training scripts and
-instructions; the agent performs the edit/run/keep-or-revert loop.
+The test gate verifies the frozen code/config/data/runtime identity and that the
+plan is committed. It prevents accidental drift; it cannot prevent an operator
+reading public test data outside the runner. A repeat with the same fixed inputs
+is a reproduction, not a new independent estimate of model quality.
+
+## Refresh data or run a new study
+
+Official [EIA-930 historical balance files](https://www.eia.gov/electricity/930-content/about.html)
+provide the source `Demand (MW)` field. The current ingest supports the four
+2024/2025 half-year files and records retrieval times, response metadata, raw
+SHA-256 hashes, quality counts, and the normalized extract hash. Download failures
+stop the run; there is no synthetic fallback.
 
 ```bash
-claude "Read program.md and run a bounded experiment session on train.py"
+# Keep the original snapshot intact. Network access required.
+.venv/bin/python prepare.py --download --cache data/raw-refresh --output data/refreshed-snapshot
 ```
 
-## Files
+A new dataset or configuration requires a new validation run and a new run plan.
+After examining this test period, use a genuinely new holdout period or nested
+evaluation for further model-selection claims. See [program.md](program.md).
 
-| File | Purpose |
+## Files and evidence
+
+| Path | Purpose |
 |---|---|
-| `prepare.py` | Synthetic data generation, feature preparation, chronological train/validation split |
-| `train.py` | Feature selection, XGBoost training, validation scoring |
-| `program.md` | Agent instructions and experiment constraints |
-| `journal.py` | Summarizes local experiment history |
-| `results/JOURNAL.md` | Committed historical experiment summary |
-| `results/changelog.md` | Historical notes on attempted changes |
+| `prepare.py` | EIA ingestion, normalization, quality counts, provenance |
+| `features.py` | Shared causal batch and recursive feature definitions |
+| `train.py` | Cutoff-restricted model fitting |
+| `benchmark.py` | Stage separation, recursive evaluation, baseline, metrics, test gate |
+| `benchmark_config.json` | Declared periods, horizon, stride, fixed model settings |
+| `benchmarks/data/` | Frozen demand extract and source manifest |
+| `benchmarks/run-plan.json` | Pre-test identity lock and protocol |
+| `benchmarks/results/` | Predictions, metrics, coverage, software and code identity |
+| `render_report.py` | Generates `benchmarks/RESULTS.md` from result artifacts |
+| `tests/` | Leakage, temporal alignment, recursion, split, provenance, and artifact checks |
+| `results/`, `journal.py` | Historical synthetic experiment records and legacy journal tooling |
 
-`train.py` reports pooled row-level MAPE across the validation data, plus
-per-region diagnostics. Training uses validation data for early stopping.
-Compute time varies with the chosen parameters; there is no enforced runtime
-budget.
-
-## Before publishing a forecasting benchmark
-
-1. Implement and verify real-data ingestion with recorded source dates.
-2. Remove target leakage and match feature construction to the intended forecast horizon.
-3. Reserve an independent test period outside the agent's tuning loop.
-4. Compare against a seasonal baseline and report per-region errors, data provenance,
-   model settings, and evaluation dates.
-
-Adding a region to the current generator adds another synthetic series. It does
-not connect an EIA series. Changing the optimization metric requires updating
-the scorer and experiment instructions together.
+CI runs the regression tests and audits the saved predictions against source
+targets, the weekly baseline, and published metrics. It does not rerun model
+selection or make live-operational performance claims.

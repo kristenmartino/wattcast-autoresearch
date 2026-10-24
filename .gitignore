@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 .env
 .pytest_cache/
+benchmarks/reproductions/
 
 # Track documentation, ignore raw metrics
 results/history.jsonl
