@@ -1,9 +1,9 @@
 # ⚡ WattCast Autoresearch Journal
 
-> Historical synthetic-data validation scores. The current preparation includes
-> the target in rolling demand features and uses observed validation lags. These
-> scores do not establish leakage-free forecasting accuracy or independent test
-> performance. See [evaluation limits](../README.md#evaluation-limits).
+> Archive of the original synthetic tuning experiment. Its preparation included
+> the target in rolling demand statistics and used observed validation lags.
+> Those scores are not comparable to the corrected real-data benchmark.
+> See [current results and provenance](../benchmarks/RESULTS.md).
 
 *Auto-generated at 2026-04-04 21:17:52*
 

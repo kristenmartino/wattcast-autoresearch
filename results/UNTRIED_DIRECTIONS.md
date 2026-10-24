@@ -1,9 +1,14 @@
 # Untried Research Directions
 
+> Archive of the original synthetic tuning experiment. Its preparation included
+> the target in rolling demand statistics and used observed validation lags.
+> Those scores are not comparable to the corrected real-data benchmark.
+> See [current results and provenance](../benchmarks/RESULTS.md).
+
 Directions from `program.md` that were **not attempted** during the 30-experiment session,
 or were only partially explored. Organized by priority for a future autoresearch run.
 
-**Current best:** 1.4411% MAPE (16.4% improvement from 1.7232% baseline)
+**Historical synthetic best:** 1.4411% MAPE (16.4% improvement from 1.7232% baseline)
 
 ---
 

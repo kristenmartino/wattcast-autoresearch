@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "source_type": "real_public_EIA930",
+  "publisher": "U.S. Energy Information Administration",
+  "sources": [
+    {
+      "url": "https://www.eia.gov/electricity/gridmonitor/sixMonthFiles/EIA930_BALANCE_2024_Jan_Jun.csv",
+      "retrieval_started_at_utc": "2026-10-24T07:34:46.157667+00:00",
+      "retrieved_at_utc": "2026-10-24T07:34:47.285800+00:00",
+      "sha256": "26768c495c3ba987e29d79df2e40d4e741f9dbcff086f53c12ff774465756a10",
+      "bytes": 41742812,
+      "etag": "\"0b0b074fc62dd1:0\"",
+      "last_modified": "Fri, 23 Oct 2026 14:40:32 GMT",
+      "content_type": "application/octet-stream"
+    },
+    {
+      "url": "https://www.eia.gov/electricity/gridmonitor/sixMonthFiles/EIA930_BALANCE_2024_Jul_Dec.csv",
+      "retrieval_started_at_utc": "2026-10-24T07:34:47.336349+00:00",
+      "retrieved_at_utc": "2026-10-24T07:34:49.923763+00:00",
+      "sha256": "a602a8e577cfdd2fa3083413eaa4dd8ba7f0d2b26a2986f8f6d22917465ea49f",
+      "bytes": 47928993,
+      "etag": "\"0374478fc62dd1:0\"",
+      "last_modified": "Fri, 23 Oct 2026 14:40:38 GMT",
+      "content_type": "application/octet-stream"
+    },
+    {
+      "url": "https://www.eia.gov/electricity/gridmonitor/sixMonthFiles/EIA930_BALANCE_2025_Jan_Jun.csv",
+      "retrieval_started_at_utc": "2026-10-24T07:34:50.002394+00:00",
+      "retrieved_at_utc": "2026-10-24T07:34:50.947093+00:00",
+      "sha256": "fac4bb991dfa1dab3b4b35300ccab54ac99be13a40ce91954db8ddafb2816242",
+      "bytes": 47565054,
+      "etag": "\"8054707cfc62dd1:0\"",
+      "last_modified": "Fri, 23 Oct 2026 14:40:45 GMT",
+      "content_type": "application/octet-stream"
+    },
+    {
+      "url": "https://www.eia.gov/electricity/gridmonitor/sixMonthFiles/EIA930_BALANCE_2025_Jul_Dec.csv",
+      "retrieval_started_at_utc": "2026-10-24T07:34:51.016507+00:00",
+      "retrieved_at_utc": "2026-10-24T07:34:53.522496+00:00",
+      "sha256": "1146158b972439db7c7f4cc7d0491e07644ddbf244d03b8ecb44cb2c833d10f1",
+      "bytes": 48256021,
+      "etag": "\"80db380fc62dd1:0\"",
+      "last_modified": "Fri, 23 Oct 2026 14:40:51 GMT",
+      "content_type": "application/octet-stream"
+    }
+  ],
+  "target_column": "Demand (MW)",
+  "excluded_columns": "Forecast, Imputed and Adjusted columns are not used",
+  "units": "MW",
+  "time_semantics": "UTC time at end of hour; labels retained as hour-ending timestamps",
+  "vintage": "Historical files as retrieved; later revisions may be present. Not an as-of-publication replay.",
+  "weather": "No weather inputs: neither observed future weather nor forecast archives used",
+  "regions": {
+    "ERCOT": "ERCO",
+    "PJM": "PJM",
+    "CAISO": "CISO",
+    "MISO": "MISO",
+    "SPP": "SWPP",
+    "NYISO": "NYIS",
+    "ISONE": "ISNE",
+    "SECO": "SOCO"
+  },
+  "period_start_inclusive": "2024-01-01T00:00:00Z",
+  "period_end_exclusive": "2026-01-01T00:00:00Z",
+  "quality": {
+    "raw_source_rows_scanned": 1067976,
+    "selected_observed_rows": 140298,
+    "identical_duplicate_rows_removed": 0,
+    "absent_hours_inserted": 54,
+    "invalid_nonpositive_or_nonfinite_rows_by_region": {
+      "CAISO": 96,
+      "ERCOT": 48,
+      "ISONE": 2,
+      "MISO": 47,
+      "NYISO": 5,
+      "PJM": 72,
+      "SPP": 1
+    },
+    "missing_target_hours_by_region": {
+      "CAISO": 105,
+      "ERCOT": 55,
+      "ISONE": 8,
+      "MISO": 53,
+      "NYISO": 11,
+      "PJM": 78,
+      "SECO": 7,
+      "SPP": 8
+    }
+  },
+  "extract": {
+    "path": "demand.csv.gz",
+    "sha256": "be92c936da78c15da761eb8106d8908e7fc5bc759b8c74aa05df475aa2394f44",
+    "bytes": 769060,
+    "rows": 140352
+  },
+  "created_at_utc": "2026-10-24T07:35:07.567952+00:00"
+}
